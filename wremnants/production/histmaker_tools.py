@@ -195,13 +195,13 @@ def write_analysis_output(results, outfile, args, name_append=[]):
                 f"Output file {outfile} exists already, it will be overwritten"
             )
         open_as = "w"
-
+    
     time0 = time.time()
     with h5py.File(outfile, open_as) as f:
         for k, v in results.items():
             logger.debug(f"Pickle and dump {k}")
             ioutils.pickle_dump_h5py(k, v, f, override=open_as != "w")
-
+            print(k,v)
         if "meta_info" not in f.keys():
             ioutils.pickle_dump_h5py(
                 "meta_info",
