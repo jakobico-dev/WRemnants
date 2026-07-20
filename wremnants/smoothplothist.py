@@ -32,26 +32,45 @@ with h5py.File("outputs/smoothhistmaker.hdf5", "r") as f:
     
 
 # Slice the tensor directly down to a 1D pT distr.
-h_1d = h_tensor[{"helicity": 0, "muRfact": 1j, "muFfact": 1j, "absYVgen": sum}] 
+for i in range(-1,9):
+    h_2d = h_tensor[{"helicity": complex(0, i), "muRfact": 1j, "muFfact": 1j}]
+
+    h_1d_absy = h_2d[{"ptVgen": sum}]
+    h_1d_pt = h_2d[{"absYVgen": sum}]
 
 
-# the canvas and draw the histogram step line
-#fig, ax = plt.subplots(figsize=(8, 8))
-#hep.histplot(h_1d, 
-             #ax=ax,
-             #histtype="step", 
-             #color="darkblue", 
-             #label=r"Smoothed QCD Scale $Z \rightarrow \mu\mu$")
+    # the canvas and draw the histogram step line
+    #fig, ax = plt.subplots(figsize=(8, 8))
+    #hep.histplot(h_1d, 
+                #ax=ax,
+                #histtype="step", 
+                #color="darkblue", 
+                #label=r"Smoothed QCD Scale $Z \rightarrow \mu\mu$")
 
-fig,ax = plt.subplots(figsize=(8,8))
-hep.histplot(h_1d, ax=ax, histtype="step", color="darkblue", label=r"Smoothed $Z \rightarrow \mu^+\mu^-$" )
+    fig,ax = plt.subplots(figsize=(8,8))
+    hep.histplot(h_1d_absy, ax=ax, histtype="step", color="darkblue", label=r"Smoothed $Z \rightarrow \mu^+\mu^-$" )
 
-# add standard axis labels 
-ax.set_xlabel(r"$p_{T}^{V} \text{ (Gen)} \text{ [GeV]}$")
-ax.set_ylabel("Events / Bin")
-ax.set_xlim(0, 80)
-hep.cms.label(ax=ax, llabel="Preliminary Simulation", rlabel="13.6 TeV")
+    # add standard axis labels 
+    ax.set_xlabel(r"$|Y^{V}| \text{ (Gen)}$")
+    ax.set_ylabel("Events / Bin")
+    ax.set_xlim(0, 5)
+    hep.cms.label(ax=ax, llabel="Preliminary Simulation", rlabel="13.6 TeV")
 
 
-plt.savefig("smoothed_helicity_distribution.png", bbox_inches="tight", dpi=300)
-print("Plot successfully saved as smoothed_helicity_distribution.png!") 
+    plt.savefig(f"rapidity_plot_helicity{i}.png", bbox_inches="tight", dpi=300)
+    print("Plot successfully saved as smoothed_helicity_distribution.png!") 
+
+    fig,ax = plt.subplots(figsize=(8,8))
+    hep.histplot(h_1d_pt, ax=ax, histtype="step", color="darkblue", label=r"Smoothed $Z \rightarrow \mu^+\mu^-$" )
+
+    # add standard axis labels 
+    ax.set_xlabel(r"$|p_T^{V}| \text{ (Gen)}$")
+    ax.set_ylabel("Events / Bin")
+    ax.set_xlim(0, 80)
+    hep.cms.label(ax=ax, llabel="Preliminary Simulation", rlabel="13.6 TeV")
+
+
+    plt.savefig(f"pt_plot_helicity{i}.png", bbox_inches="tight", dpi=300)
+    print("Plot successfully saved as smoothed_helicity_distribution.png!") 
+
+    

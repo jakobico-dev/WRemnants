@@ -114,10 +114,10 @@ print("[Histmaker] Launching plotter script...")
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-plotter_path = os.path.join(current_dir, "plothist.py")
+# plotter_path = os.path.join(current_dir, "plothist.py")
 
-# Automatically run your new plotting script right now
-subprocess.run(["python", plotter_path], check=True)
+# # Automatically run your new plotting script right now
+# subprocess.run(["python", plotter_path], check=True)
 
 
 

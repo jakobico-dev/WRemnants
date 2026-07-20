@@ -103,71 +103,6 @@ def make_qcd_uncertainty_helper_by_helicity(
     
 
 
-# Put in theory corrections code in order to help with crash: Ask David tomorrow!!!!!!
-
-
-
-# def rebin_corr_hists(hists, ndim=-1, binning=None):
-#     # Allow trailing dimensions to be different (e.g., variations)
-#     ndims = min([x.ndim for x in hists]) if ndim < 0 else ndim
-    
-#     if binning:
-#         try:
-#             # 1. If binning succeeds, return the result immediately
-#             return [
-#                 h if not h else hh.rebinHistMultiAx(h, binning.keys(), binning.values())
-#                 for h in hists
-#             ]
-#         except ValueError:
-#             # 2. If it fails, log the warning and let it fall through
-#             logger.warning("Can't rebin axes to predefined binning")
-
-#     # 3. Fallback loop: Executed if binning is None or if the try block failed
-#     for i in range(ndims):
-#         hists = hh.rebinHistsToCommon(hists, i)
-        
-#     return hists
-
-
-# def make_corr_by_helicity(
-#     ref_helicity_hist,
-#     target_sigmaul,
-#     target_sigma4,
-#     coeff_hist=None,
-#     coeffs_from_hist=[],
-#     binning=None,
-#     ndim=3,
-#     return_tensor=True, # Added this to prevent a NameError below
-# ):
-#     ref_helicity_hist, target_sigmaul, target_sigma4 = rebin_corr_hists(
-#         [ref_helicity_hist, target_sigmaul, target_sigma4], ndim, binning
-#     )
-
-#     vars_ax = (
-#         target_sigmaul.axes["vars"]
-#         if target_sigmaul
-#         else hist.axis.Regular(1, 0, 1, name="vars")
-#     )
-
-#     corr_ax = hist.axis.Boolean(name="corr")
-#     ref_coeffs = helicity_utils.helicity_xsec_to_angular_coeffs(ref_helicity_hist)
-
-#     corr_coeffs = hist.Hist(*ref_coeffs.axes, corr_ax, vars_ax)
-
-#     if return_tensor:
-#         # Create a view that ONLY has the 3 axes C++ expects
-#         corr_coeffs_slim = corr_coeffs[{"massVgen": 0, "chargeVgen": 0}] 
-        
-#         helper = makeCorrectionsTensor(
-#             corr_coeffs_slim, ROOT.wrem.CentralCorrByHelicityHelper, tensor_rank=3
-#         )
-#         helper.tensor_axes = [vars_ax]
-#         return helper
-
-#     # Fallback return if return_tensor is False
-#     return corr_coeffs
-
-
 
 def add_qcdScale_hist(results, df, axes, cols, dataset_name):
     """
@@ -244,12 +179,41 @@ def build_graph(df, dataset):
             "nominal_weight_uncorr",
         ],
     )
-    df = df.Define("pdfCT18ZWeights", "pdfWeight_tensor[0]")
+    
+    df = df.Define("pdfCT18ZWeights", "pdfWeight_tensor")
+   #Store the FULL vector/tensor of PDF weights, not just the 0th element
+    df = df.Define("nominal_weight", "pdfWeight_tensor[0]")
+
 
     # Book the scale histograms (called AFTER defining the qcdWeight_tensor)
     add_qcdScale_hist(results, df, scale_axes, scale_cols, **info) 
     
     weightsum = (df.Sum("genWeight"), df.Count())
+    
+
+    
+    axis_pt_weight = hist.axis.Variable([0, 1, 2, 5, 10, 15, 20, 35, 60, 100], name="ptVgen")
+
+    
+    axis_weight = hist.axis.Regular(100, 0.95, 1.15, name="weight_val")
+
+    
+    df = df.Define("diagnostic_weight_val", "nominal_weight")
+
+    
+    results.append(
+        df.HistoBoost(
+            "weights_hist", 
+            [axis_pt_weight, axis_weight], 
+            ["ptVgen", "diagnostic_weight_val"]
+        )
+    )
+    cols = df.GetColumnNames()
+    print("--- Available Columns in DataFrame ---")
+    for col in cols:
+        
+        if "weight" in str(col):
+            print(f"Found weight column: {col}")
     return results, weightsum
 
 
